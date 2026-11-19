@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>khokh – خوخ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1B1424;--panel:#261C33;--line:#3A2D4A;--ink:#F5EEF8;--muted:#A296B5;--peach:#FFA38F;--leaf:#9BD38B}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 Cairo,system-ui,sans-serif}
+.app{display:flex;flex-direction:column;height:100%;max-width:860px;margin:0 auto;padding-top:env(safe-area-inset-top,0px)}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.logo{font-weight:800;font-size:22px;display:flex;align-items:center;gap:8px;direction:ltr}
+.logo i{width:16px;height:16px;border-radius:50% 50% 50% 8%;background:var(--peach);display:inline-block;box-shadow:6px -6px 0 -3px var(--leaf)}
+button{font:inherit;cursor:pointer}
+.ghost{background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:4px 12px}
+.ghost:hover{color:var(--ink);border-color:var(--muted)}
+#msgs{flex:1;overflow-y:auto;padding:16px}
+.empty{margin-top:12vh;text-align:center}
+.empty h1{font-size:28px;margin:0 0 16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chips button{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:20px;padding:6px 14px}
+.chips button:hover{border-color:var(--peach)}
+.m{margin:0 0 18px;max-width:100%}
+.m.u{background:var(--panel);border-radius:14px;padding:8px 14px;width:fit-content;max-width:90%}
+.m p{margin:0 0 10px}
+.m code{font-family:"JetBrains Mono",monospace;font-size:.88em;background:var(--panel);padding:1px 6px;border-radius:6px;direction:ltr;unicode-bidi:embed}
+.blk{direction:ltr;text-align:left;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:10px 0}
+.bar{display:flex;justify-content:space-between;align-items:center;background:var(--panel);padding:4px 10px;font-size:13px;color:var(--muted)}
+.bar button{background:none;border:0;color:var(--peach);padding:2px 8px}
+.blk pre{margin:0;padding:12px;overflow-x:auto;font:13px/1.55 "JetBrains Mono",monospace;background:#150F1D}
+.dots{color:var(--muted)}
+form{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+textarea{flex:1;resize:none;max-height:160px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font:inherit;line-height:1.5}
+textarea:focus-visible,button:focus-visible{outline:2px solid var(--peach);outline-offset:2px}
+#send{background:var(--peach);color:#2A1520;border:0;border-radius:14px;padding:0 20px;font-weight:600}
+#send:disabled{opacity:.5}
+#pv{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:10;padding-top:env(safe-area-inset-top,0px)}
+#pv.on{display:flex}
+#kb{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:10;padding-top:env(safe-area-inset-top,0px)}
+#kb.on{display:flex}
+.kbb{padding:16px;overflow-y:auto;max-width:860px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.kbb input[type=password],.kbb input[type=text]{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;width:100%}
+.up{border:1px dashed var(--line);border-radius:12px;padding:12px;color:var(--muted)}
+.lr{display:flex;gap:8px}
+.row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:6px 0}
+.row button{background:none;border:0;color:var(--peach)}
+.web{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:14px;white-space:nowrap}
+#pv iframe{flex:1;border:0;background:#fff}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"><i></i>khokh</div>
+    <div><button class="ghost" id="kbb">المعرفة</button> <button class="ghost" id="new">محادثة جديدة</button></div>
+  </header>
+  <div id="msgs"></div>
+  <form id="f">
+    <label class="web"><input type="checkbox" id="web">ويب</label><textarea id="t" rows="1" placeholder="اكتب طلبك: كود، تصميم تطبيق، صفحة ويب…" aria-label="رسالتك"></textarea>
+    <button id="send" type="submit">إرسال</button>
+  </form>
+</div>
+<div id="kb">
+  <header><div class="logo">المعرفة</div><button class="ghost" id="kbc">إغلاق</button></header>
+  <div class="kbb">
+    <input id="ak" type="password" placeholder="مفتاح الأدمن (ADMIN_KEY)" autocomplete="off">
+    <label class="up">رفع ملفات للتعليم (txt, md, json, csv, كود)<input id="up" type="file" multiple></label>
+    <div class="lr"><input id="lt" type="text" placeholder="موضوع ليتعلمه من الويب"><button id="lb" class="ghost">تعلّم</button></div>
+    <p id="kbs" class="dots"></p>
+    <div id="kbl"></div>
+  </div>
+</div>
+<div id="pv">
+  <header><div class="logo">معاينة</div><button class="ghost" id="close">إغلاق</button></header>
+  <iframe id="fr" sandbox="allow-scripts"></iframe>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const msgs = $("msgs"), t = $("t"), send = $("send");
+let history = [], codes = [], busy = false;
+
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function render(text) {
+  return text.split("```").map((p, i) => {
+    if (i % 2 === 0) {
+      return esc(p).split(/\n{2,}/).filter((b) => b.trim()).map((b) =>
+        "<p>" + b.replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>") + "</p>"
+      ).join("");
+    }
+    const nl = p.indexOf("\n");
+    const lang = (nl < 0 ? "" : p.slice(0, nl)).trim();
+    const code = (nl < 0 ? p : p.slice(nl + 1)).replace(/\n$/, "");
+    codes.push(code);
+    const n = codes.length - 1;
+    const pv = lang.toLowerCase() === "html" ? `<button data-pv="${n}">معاينة</button>` : "";
+    return `<div class="blk"><div class="bar"><span>${esc(lang || "code")}</span><span>${pv}<button data-cp="${n}">نسخ</button></span></div><pre>${esc(code)}</pre></div>`;
+  }).join("");
+}
+
+function add(cls, html) {
+  const d = document.createElement("div");
+  d.className = "m " + cls;
+  d.dir = "auto";
+  d.innerHTML = html;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+  return d;
+}
+
+function home() {
+  msgs.innerHTML = `<div class="empty"><h1>شو بدك نبني اليوم؟</h1><div class="chips">
+    <button>صمم لي صفحة هبوط لمطعم</button>
+    <button>اكتب لي تطبيق مهام بـ HTML و JavaScript</button>
+    <button>اشرح لي هذا الكود وصلّحه</button></div></div>`;
+}
+
+async function ask(text) {
+  if (busy || !text.trim()) return;
+  busy = true; send.disabled = true;
+  if (!history.length) msgs.innerHTML = "";
+  history.push({ role: "user", content: text });
+  add("u", esc(text).replace(/\n/g, "<br>"));
+  const wait = add("a", '<span class="dots">…</span>');
+  try {
+    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: history, web: $("web").checked }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "خطأ");
+    history.push({ role: "assistant", content: d.text });
+    wait.innerHTML = render(d.text);
+  } catch (e) {
+    history.pop();
+    wait.innerHTML = "<p>تعذّر الاتصال: " + esc(e.message) + ". جرّب مرة ثانية.</p>";
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+  busy = false; send.disabled = false; t.focus();
+}
+
+$("f").addEventListener("submit", (e) => { e.preventDefault(); const v = t.value; t.value = ""; t.style.height = "auto"; ask(v); });
+t.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("f").requestSubmit(); } });
+t.addEventListener("input", () => { t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; });
+$("new").onclick = () => { history = []; codes = []; home(); };
+$("close").onclick = () => { $("pv").classList.remove("on"); $("fr").srcdoc = ""; };
+msgs.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.pv) { $("fr").srcdoc = codes[b.dataset.pv]; $("pv").classList.add("on"); }
+  else if (b.dataset.cp) { navigator.clipboard.writeText(codes[b.dataset.cp]).then(() => { b.textContent = "تم"; setTimeout(() => (b.textContent = "نسخ"), 1200); }); }
+  else if (b.closest(".chips")) ask(b.textContent);
+});
+const ak = () => sessionStorage.getItem("ak") || "";
+const H = () => ({ "content-type": "application/json", "x-admin-key": ak() });
+async function kbCall(url, opt) {
+  const r = await fetch(url, opt);
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || "خطأ");
+  return d;
+}
+async function kbList() {
+  const d = await kbCall("/api/kb");
+  $("kbl").innerHTML = d.docs.length
+    ? d.docs.map((x) => `<div class="row"><span dir="auto">${esc(x.name)} (${x.chunks})</span><button data-del="${x.id}">حذف</button></div>`).join("")
+    : '<p class="dots">المستودع فاضي.</p>';
+}
+$("kbb").onclick = () => { $("kb").classList.add("on"); $("ak").value = ak(); $("kbs").textContent = ""; kbList(); };
+$("kbc").onclick = () => $("kb").classList.remove("on");
+$("ak").oninput = (e) => sessionStorage.setItem("ak", e.target.value);
+$("up").onchange = async (e) => {
+  for (const f of e.target.files) {
+    try { await kbCall("/api/kb", { method: "POST", headers: H(), body: JSON.stringify({ name: f.name, text: await f.text() }) }); $("kbs").textContent = "تم رفع " + f.name; }
+    catch (err) { $("kbs").textContent = err.message; }
+  }
+  e.target.value = ""; kbList();
+};
+$("lb").onclick = async () => {
+  const topic = $("lt").value.trim();
+  if (!topic) return;
+  $("kbs").textContent = "جاري التعلم من الويب…";
+  try { await kbCall("/api/learn", { method: "POST", headers: H(), body: JSON.stringify({ topic }) }); $("kbs").textContent = "تم الحفظ."; $("lt").value = ""; kbList(); }
+  catch (err) { $("kbs").textContent = err.message; }
+};
+$("kbl").onclick = async (e) => {
+  const id = e.target.dataset.del;
+  if (!id) return;
+  try { await kbCall("/api/kb/" + id, { method: "DELETE", headers: H() }); } catch (err) { $("kbs").textContent = err.message; }
+  kbList();
+};
+home();
+</script>
+</body>
+</html>
